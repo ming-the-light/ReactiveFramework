@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>RF</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+    }
+
+    .list {
+      width: 500px;
+      margin: 100px auto;
+    }
+
+    .item {
+      border-bottom: 1px solid #efefef;
+      padding: 1rem 0rem;
+    }
+
+    .code {
+      padding: 2rem;
+      font-family: 'Operator mono';
+      background: #efefef;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="app">
+    <section id="for-test"></section>
+    <section id="reactive-test"></section>
+  </div>
+  <script src="./index.js"></script>
+  <script>
+    const { reactive, onMount, el, methods, template, createComponent, register } = RF;
+  </script>
+  <script src="./__test__/for.js"></script>
+  <script src="./__test__/reactive.js"></script>
+</body>
+
+</html>

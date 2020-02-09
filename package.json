@@ -1,0 +1,29 @@
+{
+  "name": "rf",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "dependencies": {
+    "ramda": "^0.26.1"
+  },
+  "devDependencies": {
+    "@types/ramda": "^0.26.39",
+    "babel-core": "^6.26.3",
+    "babel-plugin-external-helpers": "^6.22.0",
+    "babel-preset-env": "^1.7.0",
+    "htmlparser2": "^4.0.0",
+    "rollup": "^1.24.0",
+    "rollup-plugin-babel": "^3.0.7",
+    "rollup-plugin-node-resolve": "^5.2.0",
+    "rollup-plugin-typescript": "^1.0.1",
+    "rollup-plugin-uglify": "^6.0.3",
+    "tslib": "^1.10.0",
+    "typescript": "^3.7.4"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "rollup -c -w"
+  },
+  "author": "",
+  "license": "ISC"
+}
