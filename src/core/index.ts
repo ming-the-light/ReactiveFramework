@@ -5,10 +5,12 @@ let builder: ComponentBuilder;
 export function createComponent(Component: any, options: object, children: []) {
 
   builder = ComponentBuilder.create(Component.name);
+
   Component({
     options,
     children
   });
+  
   return builder.value();
 }
 

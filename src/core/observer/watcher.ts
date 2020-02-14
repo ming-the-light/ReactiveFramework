@@ -1,6 +1,7 @@
 import Dep, { targetStack } from "./dep";
 import { remove, path, equals } from "ramda";
 import { log, isFn } from "../../shared/utils";
+import asyncTask from "../async-task";
 
 let uid: number = 0;
 
@@ -70,7 +71,13 @@ class Watcher {
     const oldValue: any = this.value;
 
     this.value = newValue;
-    this.cb.call(this.rf, newValue, oldValue);
+
+    /* 添加到异步任务中，在值确定后再进行组件的渲染，避免重复渲染 */
+    asyncTask.push(
+      this.id,
+      () => this.cb.call(this.rf, newValue, oldValue)
+    );
+    // this.cb.call(this.rf, newValue, oldValue);
   }
 }
 

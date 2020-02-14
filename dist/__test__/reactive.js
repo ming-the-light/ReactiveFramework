@@ -7,6 +7,9 @@ const ReactiveTest = function (props) {
   methods({
     updateTitle(e) {
       this.data.title = e.target.value;
+      for (let i = 0; i < 10000; i++) {
+        this.data.title = e.target.value + i;
+      }
     }
   })
 
@@ -24,7 +27,7 @@ const Clock = function (props) {
   reactive({
     dateNow: new Date()
   });
-
+  console.log(`CLOCK PROPS:`, props);
   onMount(function () {
     if (id < 0) {
       const $this = this;

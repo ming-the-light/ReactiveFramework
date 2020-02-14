@@ -1045,6 +1045,30 @@
   var def = function def(obj, key, options) {
       return Object.defineProperty(obj, key, options);
   };
+  //# sourceMappingURL=utils.js.map
+
+  var _tasks = {};
+  function push(watcherId, cb) {
+      if (_tasks[watcherId]) {
+          return;
+      }
+      _tasks[watcherId] = cb;
+      _run();
+  }
+  function _run() {
+      setTimeout(function () {
+          forEach(function (watcherId) {
+              if (typeof _tasks[watcherId] === 'function') {
+                  _tasks[watcherId]();
+                  delete _tasks[watcherId];
+              }
+          }, Object.keys(_tasks));
+      }, 0);
+  }
+  var asyncTask = {
+      push: push
+  };
+  //# sourceMappingURL=async-task.js.map
 
   var uid$1 = 0;
   var Watcher = /** @class */function () {
@@ -1091,14 +1115,18 @@
           remove(this.deps.indexOf(dep), 1, this.deps);
       };
       Watcher.prototype.update = function () {
+          var _this = this;
           var newValue = this.get();
           var oldValue = this.value;
           this.value = newValue;
-          this.cb.call(this.rf, newValue, oldValue);
+          /* 添加到异步任务中，在值确定后再进行组件的渲染，避免重复渲染 */
+          asyncTask.push(this.id, function () {
+              return _this.cb.call(_this.rf, newValue, oldValue);
+          });
+          // this.cb.call(this.rf, newValue, oldValue);
       };
       return Watcher;
   }();
-  //# sourceMappingURL=watcher.js.map
 
   var rf;
   var forStmtReg = /\(.+?\)/;
@@ -1538,6 +1566,10 @@
   }();
   var uid$3 = 0;
   var ComponentBuilder = /** @class */function () {
+      /**
+       * The constructor of the component builder class
+       * @param componentName The component name
+       */
       function ComponentBuilder(componentName) {
           this.instance = new Component();
           this.instance.id = uid$3++;
@@ -1558,22 +1590,42 @@
           });
           return this;
       };
+      /**
+       * Defined the reactive data of the component
+       * @param obj The reactive data
+       */
       ComponentBuilder.prototype.reactive = function (obj) {
           this.instance.data = obj;
           observe(obj);
           return this;
       };
+      /**
+      * To execute callback when the data of the component to update
+      * @param fn callback
+      */
       ComponentBuilder.prototype.onUpdate = function (fn) {
           this.instance.lifecycle.onUpdate = fn;
           return this;
       };
+      /**
+       * To execute callback when the component mounted
+       * @param fn callback
+       */
       ComponentBuilder.prototype.onMount = function (fn) {
           this.instance.lifecycle.onMount = fn;
           return this;
       };
+      /**
+       * Creating a component builder
+       * @param componentName The component name
+       */
       ComponentBuilder.create = function (componentName) {
           return new ComponentBuilder(componentName);
       };
+      /**
+       * Declareing the root node that the component dom mount
+       * @param selector the selector
+       */
       ComponentBuilder.prototype.el = function (selector) {
           if (typeof selector === 'string') {
               this.instance.el = document.querySelector(selector);
@@ -1583,6 +1635,9 @@
           }
           return this;
       };
+      /**
+       * Returning the component instance
+       */
       ComponentBuilder.prototype.value = function () {
           return this.instance;
       };

@@ -1,5 +1,5 @@
 import Watcher from "./watcher";
-import { remove, __, indexOf, curry, forEach } from "ramda";
+import { remove, __, forEach } from "ramda";
 
 let uid: number = 0;
 
