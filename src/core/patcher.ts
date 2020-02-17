@@ -1,5 +1,11 @@
 import { forEach } from "ramda";
 
+/**
+ * Old and new nodes compared then generate patch 
+ * @param oldNode Old node
+ * @param newNode New node
+ */
+
 function patch(
   oldNode: Node,
   newNode: Node

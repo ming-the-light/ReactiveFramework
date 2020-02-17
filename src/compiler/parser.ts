@@ -87,7 +87,6 @@ function parseStartTag(statment: string): ParseObj {
 
   attrs = map(parseTagAttr, body.match(attrMatchReg) || []);
   tagName = path(['0'], body.match(tagNameMatchReg));
-
   type = isComponentNameReg.test(tagName) ?
     ParseType.StartComponent :
     ParseType.StartTag;
@@ -98,7 +97,9 @@ function parseStartTag(statment: string): ParseObj {
 
 function parseTagAttr(str: string): KeyValuePair {
   let kv = str.split('=');
-  return new KeyValuePair(kv[0].trim(), kv.length > 1 ? kv[1] : undefined);
+  let key = kv[0].trim();
+  let value = kv[1] && kv[1].substring(1, kv[1].length - 1);
+  return new KeyValuePair(key, value);
 }
 
 
@@ -111,7 +112,6 @@ function parseSelfCloseTag(statment: string): ParseObj {
 
   attrs = map(parseTagAttr, body.match(attrMatchReg) || []);
   tagName = path(['0'], body.match(tagNameMatchReg));
-  console.log(isComponentNameReg.test(tagName));
 
   type = isComponentNameReg.test(tagName) ?
     ParseType.SelfCloseComponent :

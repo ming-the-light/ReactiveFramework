@@ -59,7 +59,8 @@ class ComponentBuilder {
     const tokens = lexical(tempStr);
     const ast = parser(tokens);
     const code = codegen(ast, this.instance);
-
+    // console.log(ast);
+    // console.log(code);
     this.instance.$ast = ast;
     this.instance.$render = genRenderFn(
       this.instance,

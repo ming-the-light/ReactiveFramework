@@ -8,22 +8,35 @@ let rf: Component;
 const forStmtReg = /\(.+?\)/;
 const tempStmtReg = /\{(.+?)\}/g;
 
+function _genTextCode(text: string) {
+  return text.trim().replace(tempStmtReg, ($1, $2) => {
+    addWatcher(rf, $2);
+    return `'+${$2}+'`;
+  });
+}
+
 function _genOptCode(type: string, options: KeyValuePair[]) {
   return `${type}: {${
-    options.map(i => `'${i.key}': '${i.value.slice(1, i.value.length - 1)}'`).join(',')
+    options.map(i => `'${i.key}': '${i.value}'`).join(',')
     }}`;
 }
 
 function _genEventOptCode(options: KeyValuePair[]) {
   return `events: {${
     options.map(i => `'${i.key.slice(3, i.key.length)
-      }': ${i.value.slice(1, i.value.length - 1)}`).join(',')}}`;
+      }': ${i.value}`).join(',')}}`;
 }
 
 function _genEventOptCodeOfFor(options: KeyValuePair[], forStmt: any) {
   return `events: {${
     options.map(i => `'${i.key.slice(3, i.key.length)
-      }': ${forStmt} => ${i.value.slice(1, i.value.length - 1)}`).join(',')}}`;
+      }': ${forStmt} => ${i.value}`).join(',')}}`;
+}
+
+function _genAttrOptCode(attrs: KeyValuePair[]) {
+  return `attrs: {${
+    attrs.map(i => `'${i.key}': '${_genTextCode(i.value)}'`).join(',')
+    }}`
 }
 
 function genOptCode(
@@ -52,7 +65,7 @@ function genElCode(vnode: ParseObj): string {
   return `h('${vnode.content}', ${
     genOptCode(vnode.attrs, (attrs, events, directives) => {
       return `
-        ${_genOptCode('attrs', attrs)},
+        ${_genAttrOptCode(attrs)},
         ${_genEventOptCode(events)},
         ${_genOptCode('directives', directives)},
     `;
@@ -63,7 +76,7 @@ function genForCode(vnode: ParseObj): string {
   let v = vnode.attrs.filter(attr => attr.key === 'rf-for')[0];
   const forStmt = v.value.match(forStmtReg);
   let forSource = v.value.split(' ').pop();
-  forSource = forSource.substr(0, forSource.length - 1);
+  forSource = forSource;
 
   addWatcher(rf, forSource);
 
@@ -71,7 +84,7 @@ function genForCode(vnode: ParseObj): string {
   return `f('${vnode.content}',${forSource} , ${
     genOptCode(vnode.attrs, (attrs, events, directives) => {
       return `
-      ${_genOptCode('attrs', attrs)},
+      ${_genAttrOptCode(attrs)},
       ${_genEventOptCodeOfFor(events, forStmt)},
       ${_genOptCode('directives', directives)},
     `;
@@ -79,12 +92,7 @@ function genForCode(vnode: ParseObj): string {
 }
 
 function genTextCode(vnode: ParseObj): string {
-  return `t('${
-    vnode.content.trim().replace(tempStmtReg, ($1, $2) => {
-      addWatcher(rf, $2);
-      return `'+${$2}+'`;
-    })
-    }')`;
+  return `t('${_genTextCode(vnode.content)}')`;
 }
 
 function genComponentCode(vnode: ParseObj): string {
@@ -92,7 +100,7 @@ function genComponentCode(vnode: ParseObj): string {
   return `c('${vnode.content}', ${
     genOptCode(vnode.attrs, (attrs, events, directives) => {
       return `
-        ${_genOptCode('attrs', attrs)},
+        ${_genAttrOptCode(attrs)},
         ${_genEventOptCode(events)},
         ${_genOptCode('directives', directives)},
     `;
@@ -111,7 +119,7 @@ function genForComponentCode(vnode: ParseObj): string {
   return `f('${vnode.content}',${forSource} , ${
     genOptCode(vnode.attrs, (attrs, events, directives) => {
       return `
-      ${_genOptCode('attrs', attrs)},
+      ${_genAttrOptCode(attrs)},
       ${_genEventOptCodeOfFor(events, forStmt)},
       ${_genOptCode('directives', directives)},
     `;

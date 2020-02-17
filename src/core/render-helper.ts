@@ -10,7 +10,10 @@ function h(tag, options, children) {
   }
 
   if (options.events) {
-    Object.keys(options.events).forEach(key => $tag.addEventListener(key, options.events[key]));
+    Object.keys(options.events)
+      .forEach(
+        key => $tag.addEventListener(key, options.events[key])
+      );
   }
   let $fragment = document.createDocumentFragment();
   flatArray(children, []).forEach(i => {

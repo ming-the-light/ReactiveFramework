@@ -955,7 +955,9 @@
   }
   function parseTagAttr(str) {
       var kv = str.split('=');
-      return new KeyValuePair(kv[0].trim(), kv.length > 1 ? kv[1] : undefined);
+      var key = kv[0].trim();
+      var value = kv[1] && kv[1].substring(1, kv[1].length - 1);
+      return new KeyValuePair(key, value);
   }
   function parseSelfCloseTag(statment) {
       var body = statment.slice(1, statment.length - 2);
@@ -964,7 +966,6 @@
       var attrs = [];
       attrs = map(parseTagAttr, body.match(attrMatchReg) || []);
       tagName = path(['0'], body.match(tagNameMatchReg));
-      console.log(isComponentNameReg.test(tagName));
       type = isComponentNameReg.test(tagName) ? ParseType.SelfCloseComponent : ParseType.SelfCloseTag;
       var obj = new ParseObj(type, tagName, attrs);
       return obj;
@@ -1127,23 +1128,35 @@
       };
       return Watcher;
   }();
+  //# sourceMappingURL=watcher.js.map
 
   var rf;
   var forStmtReg = /\(.+?\)/;
   var tempStmtReg = /\{(.+?)\}/g;
+  function _genTextCode(text) {
+      return text.trim().replace(tempStmtReg, function ($1, $2) {
+          addWatcher(rf, $2);
+          return "'+" + $2 + "+'";
+      });
+  }
   function _genOptCode(type, options) {
       return type + ": {" + options.map(function (i) {
-          return "'" + i.key + "': '" + i.value.slice(1, i.value.length - 1) + "'";
+          return "'" + i.key + "': '" + i.value + "'";
       }).join(',') + "}";
   }
   function _genEventOptCode(options) {
       return "events: {" + options.map(function (i) {
-          return "'" + i.key.slice(3, i.key.length) + "': " + i.value.slice(1, i.value.length - 1);
+          return "'" + i.key.slice(3, i.key.length) + "': " + i.value;
       }).join(',') + "}";
   }
   function _genEventOptCodeOfFor(options, forStmt) {
       return "events: {" + options.map(function (i) {
-          return "'" + i.key.slice(3, i.key.length) + "': " + forStmt + " => " + i.value.slice(1, i.value.length - 1);
+          return "'" + i.key.slice(3, i.key.length) + "': " + forStmt + " => " + i.value;
+      }).join(',') + "}";
+  }
+  function _genAttrOptCode(attrs) {
+      return "attrs: {" + attrs.map(function (i) {
+          return "'" + i.key + "': '" + _genTextCode(i.value) + "'";
       }).join(',') + "}";
   }
   function genOptCode(options, genFn) {
@@ -1164,7 +1177,7 @@
   function genElCode(vnode) {
       var codes = vnode.children.map(_codegen);
       return "h('" + vnode.content + "', " + genOptCode(vnode.attrs, function (attrs, events, directives) {
-          return "\n        " + _genOptCode('attrs', attrs) + ",\n        " + _genEventOptCode(events) + ",\n        " + _genOptCode('directives', directives) + ",\n    ";
+          return "\n        " + _genAttrOptCode(attrs) + ",\n        " + _genEventOptCode(events) + ",\n        " + _genOptCode('directives', directives) + ",\n    ";
       }) + ", [" + codes.join(',') + "])";
   }
   function genForCode(vnode) {
@@ -1173,25 +1186,22 @@
       })[0];
       var forStmt = v.value.match(forStmtReg);
       var forSource = v.value.split(' ').pop();
-      forSource = forSource.substr(0, forSource.length - 1);
+      forSource = forSource;
       addWatcher(rf, forSource);
       var codes = vnode.children.map(function (i) {
           return forStmt + " => { " + codegen(i, rf) + " }";
       });
       return "f('" + vnode.content + "'," + forSource + " , " + genOptCode(vnode.attrs, function (attrs, events, directives) {
-          return "\n      " + _genOptCode('attrs', attrs) + ",\n      " + _genEventOptCodeOfFor(events, forStmt) + ",\n      " + _genOptCode('directives', directives) + ",\n    ";
+          return "\n      " + _genAttrOptCode(attrs) + ",\n      " + _genEventOptCodeOfFor(events, forStmt) + ",\n      " + _genOptCode('directives', directives) + ",\n    ";
       }) + ", [" + codes.join(',') + "])";
   }
   function genTextCode(vnode) {
-      return "t('" + vnode.content.trim().replace(tempStmtReg, function ($1, $2) {
-          addWatcher(rf, $2);
-          return "'+" + $2 + "+'";
-      }) + "')";
+      return "t('" + _genTextCode(vnode.content) + "')";
   }
   function genComponentCode(vnode) {
       var codes = vnode.children.map(_codegen);
       return "c('" + vnode.content + "', " + genOptCode(vnode.attrs, function (attrs, events, directives) {
-          return "\n        " + _genOptCode('attrs', attrs) + ",\n        " + _genEventOptCode(events) + ",\n        " + _genOptCode('directives', directives) + ",\n    ";
+          return "\n        " + _genAttrOptCode(attrs) + ",\n        " + _genEventOptCode(events) + ",\n        " + _genOptCode('directives', directives) + ",\n    ";
       }) + ", [" + codes.join(',') + "])";
   }
   function genForComponentCode(vnode) {
@@ -1206,7 +1216,7 @@
           return forStmt + " => { " + codegen(i, rf) + " }";
       });
       return "f('" + vnode.content + "'," + forSource + " , " + genOptCode(vnode.attrs, function (attrs, events, directives) {
-          return "\n      " + _genOptCode('attrs', attrs) + ",\n      " + _genEventOptCodeOfFor(events, forStmt) + ",\n      " + _genOptCode('directives', directives) + ",\n    ";
+          return "\n      " + _genAttrOptCode(attrs) + ",\n      " + _genEventOptCodeOfFor(events, forStmt) + ",\n      " + _genOptCode('directives', directives) + ",\n    ";
       }) + ", [" + codes.join(',') + "])";
   }
   function _codegen(ast) {
@@ -1277,6 +1287,11 @@
       }return r;
   }
 
+  /**
+   * Old and new nodes compared then generate patch
+   * @param oldNode Old node
+   * @param newNode New node
+   */
   function patch(oldNode, newNode) {
       var patches = [];
       if (!compare(oldNode, newNode)) {
@@ -1580,6 +1595,8 @@
           var tokens = lexical(tempStr);
           var ast = parse(tokens);
           var code = codegen(ast, this.instance);
+          // console.log(ast);
+          // console.log(code);
           this.instance.$ast = ast;
           this.instance.$render = genRenderFn(this.instance, code);
       };
